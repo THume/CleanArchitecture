@@ -11,11 +11,13 @@ namespace CleanArchitecture.Web.Controllers
     {
         private readonly IRepository<Guestbook> _guestbookRepository;
         private readonly IMessageSender _messageSender;
+        private readonly IGuestbookService _guestbookService;
 
-        public HomeController(IRepository<Guestbook> guestbookRepository, IMessageSender messageSender)
+        public HomeController(IRepository<Guestbook> guestbookRepository, IMessageSender messageSender, IGuestbookService guestbookService)
         {
             _guestbookRepository = guestbookRepository;
             _messageSender = messageSender;
+            _guestbookService = guestbookService;
         }
 
         public IActionResult Index()
@@ -50,15 +52,8 @@ namespace CleanArchitecture.Web.Controllers
             {
                 var guestbook = _guestbookRepository.GetById(1);
 
-                foreach(var entry in guestbook.Entries)
-                {
-                    if (entry.DateTimeCreated.Date == DateTime.UtcNow.Date)
-                    {
-                        _messageSender.SendNotificationEmail(entry.EmailAddress, entry.Message);
-                    }
-                }
+                guestbook.AddEntry(model.NewEntry);
 
-                guestbook.Entries.Add(model.NewEntry);
                 _guestbookRepository.Update(guestbook);
 
                 model.PreviousEntries.Clear();
