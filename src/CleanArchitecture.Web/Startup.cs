@@ -64,6 +64,8 @@ namespace CleanArchitecture.Web
 
                 config.For(typeof(IRepository<Guestbook>)).Add(typeof(GuestbookRepository));
 
+                config.For(typeof(IMessageSender)).Add(typeof(EmailMessageSenderService));
+
                 //Populate the container using the service collection
                 config.Populate(services);
             });

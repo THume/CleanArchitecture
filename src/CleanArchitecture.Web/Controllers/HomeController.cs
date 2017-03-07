@@ -10,10 +10,12 @@ namespace CleanArchitecture.Web.Controllers
     public class HomeController : Controller
     {
         private readonly IRepository<Guestbook> _guestbookRepository;
+        private readonly IMessageSender _messageSender;
 
-        public HomeController(IRepository<Guestbook> guestbookRepository)
+        public HomeController(IRepository<Guestbook> guestbookRepository, IMessageSender messageSender)
         {
             _guestbookRepository = guestbookRepository;
+            _messageSender = messageSender;
         }
 
         public IActionResult Index()
@@ -25,7 +27,7 @@ namespace CleanArchitecture.Web.Controllers
                     Name = "My Guestbook"
                 };
 
-                newGuestbook.Entries.Add(new GuestbookEntry { DateTimeCreated = DateTime.UtcNow.AddHours(-2), EmailAddress = "test@test.com", Message = "Hello Pips!" });
+                newGuestbook.Entries.Add(new GuestbookEntry { DateTimeCreated = DateTime.UtcNow.AddDays(-2), EmailAddress = "test@test.com", Message = "Hello Pips!" });
                 newGuestbook.Entries.Add(new GuestbookEntry { DateTimeCreated = DateTime.UtcNow.AddHours(-1), EmailAddress = "qa@test.com", Message = "Hello Pips!!" });
                 newGuestbook.Entries.Add(new GuestbookEntry { EmailAddress = "test2@test.com", Message = "Hello Pips!!!" });
 
@@ -47,6 +49,15 @@ namespace CleanArchitecture.Web.Controllers
             if(ModelState.IsValid)
             {
                 var guestbook = _guestbookRepository.GetById(1);
+
+                foreach(var entry in guestbook.Entries)
+                {
+                    if (entry.DateTimeCreated.Date == DateTime.UtcNow.Date)
+                    {
+                        _messageSender.SendNotificationEmail(entry.EmailAddress, entry.Message);
+                    }
+                }
+
                 guestbook.Entries.Add(model.NewEntry);
                 _guestbookRepository.Update(guestbook);
 
